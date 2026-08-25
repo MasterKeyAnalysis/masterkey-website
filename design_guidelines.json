@@ -1,0 +1,144 @@
+{
+  "project_context": {
+    "name": "Master Key Analysis",
+    "description": "Hybrid product: Awwwards-level marketing site and professional data-analysis dashboard.",
+    "theme": "Navy Blue and Orange corporate palette pushed to a distinctive art direction.",
+    "founder": "Vasanth"
+  },
+  "typography": {
+    "rules": "Avoid Inter, Roboto, and Space Grotesk. Use distinctive, high-end typography for both marketing and dashboard.",
+    "fonts": {
+      "headings": {
+        "family": "Cabinet Grotesk, sans-serif",
+        "usage": "Marketing page heroes, large typographic moments, manifesto numbers. Provides bold, corporate punch."
+      },
+      "body_and_dashboard": {
+        "family": "Manrope, sans-serif",
+        "usage": "Dashboard data, UI elements, body copy. Exceptional legibility at small sizes and high-density environments."
+      }
+    },
+    "scales": {
+      "h1_hero": "text-5xl md:text-6xl lg:text-7xl tracking-tighter leading-[1.1]",
+      "h2_section": "text-3xl md:text-5xl tracking-tight leading-tight",
+      "h3_card": "text-xl md:text-2xl font-semibold",
+      "dashboard_metric": "text-3xl md:text-4xl font-bold tracking-tight",
+      "body": "text-base leading-relaxed",
+      "caption": "text-xs uppercase tracking-[0.15em]"
+    }
+  },
+  "colors": {
+    "palette": {
+      "navy": {
+        "900": "#050B14",
+        "800": "#0A1428",
+        "700": "#122340",
+        "600": "#1A3059"
+      },
+      "orange": {
+        "500": "#F97316",
+        "600": "#EA580C",
+        "400": "#FB923C"
+      },
+      "neutral": {
+        "50": "#F8FAFC",
+        "100": "#F1F5F9",
+        "200": "#E2E8F0",
+        "800": "#1E293B"
+      }
+    },
+    "semantic_tokens": {
+      "marketing": {
+        "background": "navy-900 (deepest dark for immersive feel)",
+        "surface": "navy-800 with 1px border of navy-700",
+        "primary_text": "white",
+        "secondary_text": "neutral-200",
+        "accent": "orange-500"
+      },
+      "dashboard": {
+        "background": "neutral-50 (clean light mode for data legibility) or navy-900 (dark mode)",
+        "sidebar": "navy-800",
+        "surface": "white (light mode) / navy-800 (dark mode)",
+        "border": "neutral-200 (light) / navy-700 (dark)",
+        "accent": "orange-500"
+      }
+    }
+  },
+  "hybrid_architecture": {
+    "marketing_site": {
+      "layout_strategy": "Immersive, high-impact storytelling. Use 'Tetris' grid and generous spacing (p-12, p-24).",
+      "hero_section": "Kinetic hero with masked line-by-line text reveal. Abstract data visualization overlay.",
+      "manifesto": "Numbered chapters using massive typography (e.g., text-8xl for numbers with low opacity).",
+      "editorial_marquee": "Slow, elegant scrolling text. Monospace or Cabinet Grotesk, low contrast against background, gap-32 between items."
+    },
+    "dashboard_app": {
+      "layout_strategy": "High-density, functional beauty. Left sidebar navigation (Overview, Data Upload, Data Analysis, Charts, Detailed Results, Reports/Export, Admin).",
+      "spacing": "Tight, efficient grid (gap-4, p-4, p-6). Every pixel utilized.",
+      "components": "Shadcn UI heavily customized. KPI metric cards, Recharts for data visualization, Data tables with filters/sort."
+    }
+  },
+  "visual_enhancers": {
+    "marketing": [
+      {
+        "name": "Glassmorphism Navbar",
+        "classes": "backdrop-blur-xl bg-navy-900/60 border-b border-white/10"
+      },
+      {
+        "name": "Tracing Beam",
+        "usage": "Use on key service cards to signal 'Active/Alive' technology. A glowing orange gradient line that travels around the container edge."
+      }
+    ],
+    "dashboard": [
+      {
+        "name": "Crisp Neumorphism",
+        "usage": "Flat solid backgrounds with subtle 1px borders and soft ambient shadows for KPI cards. Do not use glassmorphism on data cards."
+      }
+    ]
+  },
+  "motion": {
+    "library": "framer-motion, lenis (for smooth scrolling on marketing site)",
+    "specs": {
+      "line_reveal": {
+        "initial": { "y": "100%", "opacity": 0 },
+        "animate": { "y": 0, "opacity": 1 },
+        "transition": { "duration": 0.8, "ease": [0.16, 1, 0.3, 1], "staggerChildren": 0.1 }
+      },
+      "hover_lift": {
+        "whileHover": { "y": -4, "transition": { "duration": 0.2 } }
+      }
+    }
+  },
+  "media": {
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1770368437389-86bde15fcb33?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGRhdGElMjB2aXN1YWxpemF0aW9uJTIwYmx1ZSUyMG9yYW5nZXxlbnwwfHx8fDE3ODc2NzgxMTd8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Hero / Abstract Data",
+        "description": "Abstract blue and orange geometric data shapes. Use as background for marketing hero or services."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1589386417686-0d34b5903d23?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjBidXNpbmVzcyUyMGNvbnN1bHRhbnQlMjBwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODc2NzgxMTd8MA&ixlib=rb-4.1.0&q=85",
+        "category": "Founder Portrait",
+        "description": "Professional portrait for Vasanth (Founder section)."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwzfHxmaW5hbmNpYWwlMjBjaGFydHMlMjBhbmFseXRpY3MlMjBzY3JlZW58ZW58MHx8fHwxNzg3Njc4MTE3fDA&ixlib=rb-4.1.0&q=85",
+        "category": "Analytics / Services",
+        "description": "Graphs and performance analytics on a screen."
+      },
+      {
+        "url": "https://images.pexels.com/photos/12903168/pexels-photo-12903168.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "Consulting / Team",
+        "description": "Team collaborating in office for 'Process' or 'Why Choose Us' section."
+      }
+    ],
+    "rules": "Never use placeholder images. If overlays are used on images, ensure maximum opacity is black/50 or navy/60 to let the image breathe."
+  },
+  "instructions_to_main_agent": {
+    "file_extensions": "CRITICAL: Use .js (and .jsx semantics inside them if needed by the builder, but strictly create .js files, NOT .tsx). Remove all TypeScript type annotations.",
+    "testing_attributes": "All interactive and key informational elements MUST include a `data-testid` attribute (e.g., `data-testid=\"hero-cta-button\"`, `data-testid=\"kpi-revenue-card\"`).",
+    "transparency_rule": "CRITICAL: DO NOT use completely transparent backgrounds in headers, dropdowns, overlays, or any surface that has content under it. Apply backdrop-blur and a semi-solid color.",
+    "component_libraries": "Use Shadcn UI for dashboard components (tables, inputs, dialogs). Use raw HTML/Tailwind for marketing layouts to ensure creative freedom without rigid card structures.",
+    "animation_transitions": "Do NOT apply universal transitions like `transition: all`. Target specific properties (e.g., `transition: transform 0.2s ease, opacity 0.2s ease`).",
+    "fonts_installation": "Remember to import Cabinet Grotesk and Manrope from an appropriate font provider (Google Fonts for Manrope, Fontshare for Cabinet Grotesk).",
+    "icons": "Use lucide-react for standard icons, ensuring clean stroke weights."
+  }
+}
