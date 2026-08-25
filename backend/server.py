@@ -508,6 +508,42 @@ async def dashboard_stats(admin=Depends(get_current_admin)):
     }
 
 
+@api_router.get("/finance/sample")
+async def finance_sample():
+    seed = [
+        ("Jan", 420, 180, 150), ("Feb", 450, 200, 170), ("Mar", 480, 220, 195),
+        ("Apr", 505, 190, 210), ("May", 485, 240, 225), ("Jun", 500, 260, 240),
+        ("Jul", 520, 230, 235), ("Aug", 515, 250, 260), ("Sep", 505, 270, 245),
+        ("Oct", 530, 280, 270), ("Nov", 540, 300, 290), ("Dec", 550, 320, 310),
+    ]
+    unit_price = 1250
+    monthly = []
+    for month, opening, purchases, sales in seed:
+        closing = opening + purchases - sales
+        monthly.append({
+            "month": month,
+            "opening_stock": opening,
+            "purchases": purchases,
+            "sales": sales,
+            "closing_stock": closing,
+            "turnover": sales * unit_price,
+        })
+    total_turnover = sum(m["turnover"] for m in monthly)
+    return {
+        "currency": "INR",
+        "unit_price": unit_price,
+        "kpis": {
+            "opening_stock": monthly[0]["opening_stock"],
+            "closing_stock": monthly[-1]["closing_stock"],
+            "total_purchases": sum(m["purchases"] for m in monthly),
+            "total_sales": sum(m["sales"] for m in monthly),
+            "total_turnover": total_turnover,
+            "avg_monthly_turnover": round(total_turnover / len(monthly), 2),
+        },
+        "monthly": monthly,
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(

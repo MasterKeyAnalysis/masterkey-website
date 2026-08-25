@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import {
   KeyRound, LayoutDashboard, UploadCloud, Search, BarChart3, Table2,
-  FileDown, ShieldCheck, LogOut, Menu, X, Globe,
+  FileDown, ShieldCheck, LogOut, Menu, X, Globe, TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,6 +11,7 @@ const NAV = [
   { to: "/dashboard/upload", icon: UploadCloud, label: "Data Upload" },
   { to: "/dashboard/analysis", icon: Search, label: "Data Analysis" },
   { to: "/dashboard/charts", icon: BarChart3, label: "Charts" },
+  { to: "/dashboard/finance", icon: TrendingUp, label: "Financial Insights" },
   { to: "/dashboard/results", icon: Table2, label: "Detailed Results" },
   { to: "/dashboard/reports", icon: FileDown, label: "Reports & Export" },
   { to: "/dashboard/admin", icon: ShieldCheck, label: "Admin" },
@@ -90,6 +91,7 @@ export default function DashboardLayout() {
             <span className="font-display font-bold text-navy-800 tracking-tight hidden sm:block">Analytics Workspace</span>
           </div>
           <div className="flex items-center gap-4">
+            <img src="/assets/vasanth.png" alt="Vasanth" className="w-9 h-9 rounded-full object-cover border-2 border-orange-500" data-testid="header-avatar" />
             <span className="text-sm text-slate-500 hidden md:block" data-testid="dashboard-user-email">{user?.email}</span>
             <button
               onClick={handleLogout}

@@ -23,6 +23,14 @@ A hybrid product for Master Key Analysis (Founder: Vasanth, "Unlocking Business 
 - Dashboard: left sidebar layout (responsive, mobile drawer), Overview (KPIs + recent activity), Data Upload (drag-drop, pandas cleaning/profiling, 20k row cap), Data Analysis (KPI cards + per-column profiles: numeric stats / top values), Charts (bar/line/area/pie via MongoDB aggregation, X/Y/agg controls), Detailed Results (search, column filter, sortable headers, pagination), Reports & Export (CSV, XLSX, JSON analysis summary), Admin (enquiry read/unread/delete, dataset delete).
 - Verified: all API endpoints with curl (login, me, 401 guard, enquiry, upload, rows+search, aggregate, CSV export, stats); screenshots of home hero, scroll sections, login→overview, charts with live data.
 
+## Update (2026-08-25, iteration 2)
+- Founder's real photo (/assets/vasanth.png) now used in the hero (spotlight clipped frame), Founder page, Home founder teaser, and as the dashboard header avatar.
+- About stat box "6 Core Tools" replaced with "Financial Analytics & Excel Stock Mgmt".
+- New GET /api/finance/sample endpoint serving deterministic sample stock/financial data (opening stock, purchases, sales, closing stock, turnover for 12 months).
+- New marketing section "Sample Insights" on Home: dark Power BI-style KPI cards + stock movement bar chart + turnover line chart.
+- New dashboard page "Financial Insights" (/dashboard/finance): dark Power BI-themed panel with 4 KPI cards, turnover line chart, stock movement bar chart, closing stock area chart. Sidebar nav updated.
+- Verified: finance endpoint curl OK; screenshots of hero photo, showcase section, and finance dashboard page.
+
 ## Backlog / Next Tasks
 - P0: none outstanding — core flows all working
 - P1: Email notification to info@masterkeyanalysis.in on new enquiry (Resend); multiple non-admin user accounts with roles

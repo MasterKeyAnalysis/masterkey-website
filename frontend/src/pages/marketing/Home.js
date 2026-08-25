@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ArrowDown, Phone } from "lucide-react";
 import { LineMask, FadeUp, SectionTag, Marquee } from "@/components/marketing/Reveal";
 import { SERVICES, MARQUEE_ITEMS, PROCESS, IMAGES, CONTACT } from "@/data/content";
+import FinanceShowcase from "@/components/marketing/FinanceShowcase";
 
 function Hero() {
   const ref = useRef(null);
@@ -66,6 +67,24 @@ function Hero() {
         >
           <ArrowDown className="w-4 h-4 animate-bounce" /> Scroll to unlock
         </motion.div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 60, rotate: 8 }}
+        animate={{ opacity: 1, y: 0, rotate: 3 }}
+        transition={{ duration: 1.1, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
+        className="hidden 2xl:block absolute right-16 top-1/2 -translate-y-1/2 z-10"
+        data-testid="hero-founder-photo"
+      >
+        <div className="absolute -inset-8 bg-orange-500/25 blur-3xl rounded-full" />
+        <div className="relative w-72 rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
+          <img src={IMAGES.founder} alt="Vasanth — Founder, Master Key Analysis" className="w-full aspect-[4/5] object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/70 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-4 right-4">
+            <p className="font-display font-bold text-lg leading-tight">Vasanth</p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-orange-400">Founder</p>
+          </div>
+        </div>
       </motion.div>
     </section>
   );
@@ -235,6 +254,7 @@ export default function Home() {
       <Marquee items={MARQUEE_ITEMS} />
       <Approach />
       <ServicesPreview />
+      <FinanceShowcase />
       <ProcessTeaser />
       <FounderTeaser />
       <CtaBand />

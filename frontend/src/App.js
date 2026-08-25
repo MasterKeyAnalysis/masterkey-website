@@ -21,6 +21,7 @@ import ChartsPage from "@/pages/dashboard/ChartsPage";
 import Results from "@/pages/dashboard/Results";
 import Reports from "@/pages/dashboard/Reports";
 import Admin from "@/pages/dashboard/Admin";
+import Finance from "@/pages/dashboard/Finance";
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -63,6 +64,7 @@ function App() {
               <Route path="upload" element={<Upload />} />
               <Route path="analysis" element={<Analysis />} />
               <Route path="charts" element={<ChartsPage />} />
+              <Route path="finance" element={<Finance />} />
               <Route path="results" element={<Results />} />
               <Route path="reports" element={<Reports />} />
               <Route path="admin" element={<Admin />} />

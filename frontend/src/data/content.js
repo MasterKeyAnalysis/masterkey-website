@@ -125,7 +125,7 @@ export const MARQUEE_ITEMS = [
 
 export const IMAGES = {
   hero: "https://images.unsplash.com/photo-1770368437389-86bde15fcb33?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGRhdGElMjB2aXN1YWxpemF0aW9uJTIwYmx1ZSUyMG9yYW5nZXxlbnwwfHx8fDE3ODc2NzgxMTd8MA&ixlib=rb-4.1.0&q=85",
-  founder: "https://images.unsplash.com/photo-1589386417686-0d34b5903d23?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjBidXNpbmVzcyUyMGNvbnN1bHRhbnQlMjBwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdHxlbnwwfHx8fDE3ODc2NzgxMTd8MA&ixlib=rb-4.1.0&q=85",
+  founder: "/assets/vasanth.png",
   analytics: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwzfHxmaW5hbmNpYWwlMjBjaGFydHMlMjBhbmFseXRpY3MlMjBzY3JlZW58ZW58MHx8fHwxNzg3Njc4MTE3fDA&ixlib=rb-4.1.0&q=85",
   team: "https://images.pexels.com/photos/12903168/pexels-photo-12903168.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
 };
