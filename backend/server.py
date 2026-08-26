@@ -6,11 +6,17 @@ import io
 import re
 import json
 import math
+import asyncio
 import logging
+import ipaddress
+from html import escape
+from html.parser import HTMLParser
+from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 import bcrypt
+import httpx
 import jwt
 import numpy as np
 import pandas as pd
@@ -85,6 +91,149 @@ def to_oid(id_str: str) -> ObjectId:
     if not ObjectId.is_valid(id_str):
         raise HTTPException(status_code=404, detail="Record not found")
     return ObjectId(id_str)
+
+
+# ---------------- Email (Emergent managed Resend) ----------------
+
+EMAIL_BASE_URL = "https://integrations.emergentagent.com"
+EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY")
+EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Master Key Analysis")
+EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
+OWNER_NOTIFY_EMAIL = os.environ.get("OWNER_NOTIFY_EMAIL")
+
+_SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
+_CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
+             "send us your password", "enter your password below", "confirm your card number",
+             "your full card number", "seed phrase", "recovery phrase", "verify your card",
+             "social security number", "confirm your bank details")
+_HOSTISH = re.compile(r"\b(?:https?://)?((?:[a-z0-9-]+\.)+[a-z]{2,})", re.I)
+
+
+def _host_ok(host: str) -> bool:
+    if not host or "xn--" in host:
+        return False
+    try:
+        ipaddress.ip_address(host)
+        return False
+    except ValueError:
+        pass
+    return not any(host == s or host.endswith("." + s) for s in _SHORTENERS)
+
+
+def _same_site(shown: str, real: str) -> bool:
+    return shown == real or real.endswith("." + shown) or shown.endswith("." + real)
+
+
+class _EmailScan(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.tags, self.urls, self.anchors = set(), [], []
+        self._href, self._text = None, []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.add(tag.lower())
+        self.urls += [v for k, v in attrs if k.lower() in ("href", "src") and v]
+        if tag.lower() == "a":
+            self._href = dict((k.lower(), v) for k, v in attrs).get("href")
+            self._text = []
+
+    def handle_data(self, data):
+        if self._href is not None:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "a" and self._href is not None:
+            self.anchors.append((self._href, "".join(self._text)))
+            self._href, self._text = None, []
+
+
+def _assert_safe_email(subject: str, html: str) -> None:
+    scan = _EmailScan()
+    scan.feed(html)
+    if scan.tags & {"form", "input", "textarea", "select"}:
+        raise ValueError("No forms or input fields in email (G2)")
+    body = f"{subject}\n{html}".lower()
+    for p in _CRED_ASK:
+        if p in body:
+            raise ValueError(f"Email asks the recipient for credentials: {p!r} (G2)")
+    for url in scan.urls:
+        low = url.strip().lower()
+        if low.startswith(("mailto:", "tel:", "cid:", "#")):
+            continue
+        if not low.startswith("https://"):
+            raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
+        host = urlparse(low).hostname or ""
+        if not _host_ok(host) or urlparse(low).username is not None:
+            raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
+    for href, text in scan.anchors:
+        real = urlparse(href.strip().lower()).hostname or ""
+        if not real:
+            continue
+        for m in _HOSTISH.finditer(text):
+            if not _same_site(m.group(1).lower(), real):
+                raise ValueError(f"Anchor text {m.group(1)!r} != real link host {real!r} (G3)")
+
+
+async def send_email(*, to: str, subject: str, html: str, reply_to: Optional[str] = None) -> Optional[str]:
+    _assert_safe_email(subject, html)
+    payload = {"to": [to], "subject": subject, "html": html, "from_name": EMAIL_FROM_NAME}
+    if reply_to or EMAIL_REPLY_TO:
+        payload["contact_email"] = reply_to or EMAIL_REPLY_TO
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                f"{EMAIL_BASE_URL}/api/v1/email/send",
+                headers={"X-Email-Key": EMAIL_KEY},
+                json=payload,
+            )
+        resp.raise_for_status()
+        return resp.json().get("id")
+    except Exception as e:
+        logger.error(f"Email send error: {e}")
+        return None
+
+
+def enquiry_email_html(doc) -> str:
+    rows = "".join(
+        f'<tr><td style="padding:10px 16px;color:#64748B;font-size:13px;width:110px;vertical-align:top">{label}</td>'
+        f'<td style="padding:10px 16px;color:#0A1428;font-size:14px;font-weight:600">{escape(str(value)) if value else "—"}</td></tr>'
+        for label, value in [
+            ("Name", doc["name"]),
+            ("Email", doc["email"]),
+            ("Phone", doc.get("phone")),
+            ("Service", doc.get("service")),
+        ]
+    )
+    return (
+        '<table role="presentation" width="100%" style="background:#F1F5F9;padding:32px 0">'
+        '<tr><td align="center">'
+        '<table role="presentation" width="560" style="background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif">'
+        '<tr><td style="background:#0A1428;padding:20px 28px">'
+        '<span style="color:#F97316;font-size:18px;font-weight:bold">Master Key Analysis</span>'
+        '<span style="color:#94A3B8;font-size:12px;float:right;padding-top:4px">New website enquiry</span>'
+        '</td></tr>'
+        f'<tr><td style="padding:8px 12px"><table role="presentation" width="100%">{rows}</table></td></tr>'
+        '<tr><td style="padding:8px 28px 24px">'
+        '<p style="color:#64748B;font-size:13px;margin:8px 0 4px">Message</p>'
+        f'<p style="color:#0A1428;font-size:14px;line-height:1.6;background:#F8FAFC;border-left:3px solid #F97316;padding:12px 16px;margin:0">{escape(doc["message"])}</p>'
+        '</td></tr>'
+        f'<tr><td style="padding:16px 28px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px">'
+        f'Sent by the {escape(EMAIL_FROM_NAME)} website contact form. Reply-To is set to {escape(EMAIL_REPLY_TO or "")}.'
+        '</td></tr>'
+        '</table></td></tr></table>'
+    )
+
+
+async def notify_new_enquiry(doc):
+    try:
+        subject = f"New enquiry: {doc['name']} — {doc.get('service') or 'General'}"
+        email_id = await send_email(to=OWNER_NOTIFY_EMAIL, subject=subject, html=enquiry_email_html(doc))
+        if email_id:
+            logger.info(f"Enquiry notification sent to {OWNER_NOTIFY_EMAIL} (id {email_id})")
+        else:
+            logger.warning("Enquiry notification failed to send")
+    except Exception as e:
+        logger.error(f"Enquiry notification error: {e}")
 
 
 class LoginInput(BaseModel):
@@ -192,6 +341,8 @@ async def create_enquiry(input: EnquiryInput):
         "created_at": datetime.now(timezone.utc),
     }
     result = await db.enquiries.insert_one(doc)
+    if EMAIL_KEY and OWNER_NOTIFY_EMAIL:
+        asyncio.create_task(notify_new_enquiry(doc))
     return {"id": str(result.inserted_id), "message": "Enquiry received"}
 
 
