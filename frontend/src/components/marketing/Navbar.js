@@ -33,13 +33,9 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 group" data-testid="navbar-logo">
-          <span className="w-10 h-10 rounded-lg bg-orange-500 grid place-items-center transition-transform duration-300 group-hover:rotate-12">
-            <KeyRound className="w-5 h-5 text-navy-900" strokeWidth={2.5} />
-          </span>
-          <span className="leading-none">
-            <span className="block font-display font-800 font-extrabold tracking-tight text-lg">MASTER KEY</span>
-            <span className="block text-[10px] uppercase tracking-[0.45em] text-orange-400">Analysis</span>
+        <Link to="/" className="flex items-center" data-testid="navbar-logo">
+          <span className="bg-white rounded-lg px-3 py-1.5 inline-flex transition-transform duration-300 hover:-translate-y-0.5">
+            <img src="/assets/logo.png" alt="Master Key Analysis" className="h-9 w-auto" />
           </span>
         </Link>
 

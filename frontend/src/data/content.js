@@ -47,7 +47,7 @@ export const SERVICES = [
   },
   {
     icon: Database,
-    title: "PostgreSQL Solutions",
+    title: "SQL Solutions",
     tagline: "Reliable and scalable database solutions built on PostgreSQL.",
     points: ["Database development & design", "SQL queries", "Data management", "Reporting databases", "Data extraction & transformation", "Analytics & BI tool integration"],
   },

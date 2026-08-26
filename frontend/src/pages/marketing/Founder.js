@@ -27,8 +27,8 @@ export default function Founder() {
       <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 grid lg:grid-cols-5 gap-16 items-start">
           <FadeUp className="lg:col-span-2 relative">
-            <div className="rounded-3xl overflow-hidden aspect-[4/5]">
-              <img src={IMAGES.founder} alt="Vasanth, Founder" className="w-full h-full object-cover" />
+            <div className="rounded-3xl overflow-hidden">
+              <img src={IMAGES.founder} alt="Vasanth, Founder" className="w-full h-auto block" />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-900/60 to-transparent rounded-3xl" />
             </div>
             <div className="mt-8 grid grid-cols-2 gap-3">

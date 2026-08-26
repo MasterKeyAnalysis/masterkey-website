@@ -8,13 +8,9 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16">
         <div className="grid md:grid-cols-3 gap-12">
           <div>
-            <div className="flex items-center gap-3 mb-5">
-              <span className="w-10 h-10 rounded-lg bg-orange-500 grid place-items-center">
-                <KeyRound className="w-5 h-5 text-navy-900" strokeWidth={2.5} />
-              </span>
-              <span className="leading-none">
-                <span className="block font-display font-extrabold tracking-tight text-lg">MASTER KEY</span>
-                <span className="block text-[10px] uppercase tracking-[0.45em] text-orange-400">Analysis</span>
+            <div className="mb-5">
+              <span className="bg-white rounded-lg px-3 py-1.5 inline-flex">
+                <img src="/assets/logo.png" alt="Master Key Analysis" className="h-9 w-auto" />
               </span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">

@@ -31,6 +31,13 @@ A hybrid product for Master Key Analysis (Founder: Vasanth, "Unlocking Business 
 - New dashboard page "Financial Insights" (/dashboard/finance): dark Power BI-themed panel with 4 KPI cards, turnover line chart, stock movement bar chart, closing stock area chart. Sidebar nav updated.
 - Verified: finance endpoint curl OK; screenshots of hero photo, showcase section, and finance dashboard page.
 
+## Update (2026-08-26, iteration 3)
+- Hero background replaced with a subtle data-analytics watermark layer (HeroWatermark.js): grid, line/bar/donut charts, KPI card outlines, faint figures, and a giant faded "DATA ANALYSIS" text — all low opacity, parallax preserved.
+- Original uncropped founder photo (vasanth.png) shown with full framing in the hero card, founder teaser, and Founder page (no aspect-crop). Mobile stacks the photo below the hero content; a tightly cropped vasanth-avatar.png is used only for the tiny dashboard header avatar.
+- Official Master Key Analysis logo cropped from the flyer (/assets/logo.png) now used in the marketing navbar, footer, dashboard sidebar, and login page (white pill, original proportions/colors).
+- Service renamed exactly: "PostgreSQL Solutions" → "SQL Solutions" (contact form dropdown updates automatically via shared content data).
+- Verified desktop + mobile hero layouts (photo, logo, text, watermark aligned and readable).
+
 ## Backlog / Next Tasks
 - P0: none outstanding — core flows all working
 - P1: Email notification to info@masterkeyanalysis.in on new enquiry (Resend); multiple non-admin user accounts with roles

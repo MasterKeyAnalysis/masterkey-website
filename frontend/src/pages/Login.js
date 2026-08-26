@@ -31,13 +31,9 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-navy-900 grid place-items-center px-6 grain relative" data-testid="login-page">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center justify-center gap-3 mb-10" data-testid="login-logo">
-          <span className="w-11 h-11 rounded-lg bg-orange-500 grid place-items-center">
-            <KeyRound className="w-5 h-5 text-navy-900" strokeWidth={2.5} />
-          </span>
-          <span className="leading-none">
-            <span className="block font-display font-extrabold tracking-tight text-xl text-white">MASTER KEY</span>
-            <span className="block text-[10px] uppercase tracking-[0.45em] text-orange-400">Analysis</span>
+        <Link to="/" className="flex justify-center mb-10" data-testid="login-logo">
+          <span className="bg-white rounded-xl px-4 py-2 inline-flex">
+            <img src="/assets/logo.png" alt="Master Key Analysis" className="h-11 w-auto" />
           </span>
         </Link>
         <form onSubmit={submit} className="rounded-3xl bg-navy-800 border border-navy-700 p-10 space-y-5" data-testid="login-form">

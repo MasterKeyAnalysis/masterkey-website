@@ -20,13 +20,9 @@ const NAV = [
 function SidebarContent({ onNavigate }) {
   return (
     <>
-      <Link to="/" className="flex items-center gap-3 px-6 h-20 border-b border-white/10" data-testid="sidebar-logo">
-        <span className="w-9 h-9 rounded-lg bg-orange-500 grid place-items-center shrink-0">
-          <KeyRound className="w-4 h-4 text-navy-900" strokeWidth={2.5} />
-        </span>
-        <span className="leading-none">
-          <span className="block font-display font-extrabold tracking-tight text-white">MASTER KEY</span>
-          <span className="block text-[9px] uppercase tracking-[0.4em] text-orange-400">Analysis</span>
+      <Link to="/" className="flex items-center px-5 h-20 border-b border-white/10" data-testid="sidebar-logo">
+        <span className="bg-white rounded-lg px-2.5 py-1.5 inline-flex">
+          <img src="/assets/logo.png" alt="Master Key Analysis" className="h-8 w-auto" />
         </span>
       </Link>
       <nav className="flex-1 px-3 py-6 space-y-1" data-testid="sidebar-nav">
@@ -91,7 +87,7 @@ export default function DashboardLayout() {
             <span className="font-display font-bold text-navy-800 tracking-tight hidden sm:block">Analytics Workspace</span>
           </div>
           <div className="flex items-center gap-4">
-            <img src="/assets/vasanth.png" alt="Vasanth" className="w-9 h-9 rounded-full object-cover border-2 border-orange-500" data-testid="header-avatar" />
+            <img src="/assets/vasanth-avatar.png" alt="Vasanth" className="w-9 h-9 rounded-full object-cover border-2 border-orange-500" data-testid="header-avatar" />
             <span className="text-sm text-slate-500 hidden md:block" data-testid="dashboard-user-email">{user?.email}</span>
             <button
               onClick={handleLogout}

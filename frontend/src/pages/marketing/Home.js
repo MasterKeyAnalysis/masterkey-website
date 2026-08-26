@@ -5,6 +5,7 @@ import { ArrowRight, ArrowDown, Phone } from "lucide-react";
 import { LineMask, FadeUp, SectionTag, Marquee } from "@/components/marketing/Reveal";
 import { SERVICES, MARQUEE_ITEMS, PROCESS, IMAGES, CONTACT } from "@/data/content";
 import FinanceShowcase from "@/components/marketing/FinanceShowcase";
+import HeroWatermark from "@/components/marketing/HeroWatermark";
 
 function Hero() {
   const ref = useRef(null);
@@ -13,11 +14,10 @@ function Hero() {
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center overflow-hidden grain" data-testid="hero-section">
+    <section ref={ref} className="relative min-h-screen flex flex-col lg:flex-row items-center overflow-hidden grain" data-testid="hero-section">
       <motion.div className="absolute inset-0" style={{ y: bgY }}>
-        <img src={IMAGES.hero} alt="" className="w-full h-full object-cover scale-110" />
-        <div className="absolute inset-0 bg-navy-900/80" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/40 to-navy-900/60" />
+        <HeroWatermark />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/50 to-navy-900/70" />
       </motion.div>
 
       <motion.div style={{ opacity: fade }} className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-24 w-full">
@@ -73,12 +73,12 @@ function Hero() {
         initial={{ opacity: 0, y: 60, rotate: 8 }}
         animate={{ opacity: 1, y: 0, rotate: 3 }}
         transition={{ duration: 1.1, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden 2xl:block absolute right-16 top-1/2 -translate-y-1/2 z-10"
+        className="relative mt-12 mx-auto w-56 lg:w-auto lg:m-0 lg:absolute lg:right-6 2xl:right-16 lg:bottom-8 2xl:bottom-auto 2xl:top-1/2 2xl:-translate-y-1/2 z-10"
         data-testid="hero-founder-photo"
       >
         <div className="absolute -inset-8 bg-orange-500/25 blur-3xl rounded-full" />
-        <div className="relative w-72 rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
-          <img src={IMAGES.founder} alt="Vasanth — Founder, Master Key Analysis" className="w-full aspect-[4/5] object-cover" />
+        <div className="relative w-full lg:w-52 2xl:w-72 rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
+          <img src={IMAGES.founder} alt="Vasanth — Founder, Master Key Analysis" className="w-full h-auto block" />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-900/70 via-transparent to-transparent" />
           <div className="absolute bottom-4 left-4 right-4">
             <p className="font-display font-bold text-lg leading-tight">Vasanth</p>
@@ -188,8 +188,8 @@ function FounderTeaser() {
     <section className="py-28 lg:py-36 bg-navy-800/40 overflow-hidden" data-testid="founder-teaser">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 grid lg:grid-cols-2 gap-16 items-center">
         <FadeUp className="relative">
-          <div className="relative rounded-3xl overflow-hidden aspect-[4/5] max-w-md">
-            <img src={IMAGES.founder} alt="Vasanth, Founder of Master Key Analysis" className="w-full h-full object-cover" />
+          <div className="relative rounded-3xl overflow-hidden max-w-md">
+            <img src={IMAGES.founder} alt="Vasanth, Founder of Master Key Analysis" className="w-full h-auto block" />
             <div className="absolute inset-0 bg-gradient-to-t from-navy-900/70 to-transparent" />
           </div>
           <div className="absolute -bottom-6 -right-2 md:right-6 bg-orange-500 text-navy-900 rounded-2xl px-6 py-4 font-display font-bold tracking-tight shadow-2xl">
