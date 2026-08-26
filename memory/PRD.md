@@ -42,6 +42,8 @@ A hybrid product for Master Key Analysis (Founder: Vasanth, "Unlocking Business 
 - Favicon (icon mark cropped from the official logo) + tab title "Master Key Analysis | Data Insights. Smart Solutions." + navy theme-color and meta description.
 - Enquiry email alerts: every contact-form submission now triggers an instant branded notification email to info@masterkeyanalysis.in via the Emergent managed Resend integration (EMERGENT_EMAIL_KEY in backend/.env, background task so the form never blocks or fails, guardrail gate on every send). Reply-To: info@masterkeyanalysis.in. Verified with two live sends (202 Accepted).
 
+- Client auto-reply: every enquiry also triggers an instant branded thank-you email to the client (greets them by first name, references their chosen service, includes phone/email contact block). Verified live (202 Accepted for both sends).
+
 ## Backlog / Next Tasks
 - P0: none outstanding — core flows all working
 - P1: Email notification to info@masterkeyanalysis.in on new enquiry (Resend); multiple non-admin user accounts with roles

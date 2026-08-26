@@ -224,6 +224,43 @@ def enquiry_email_html(doc) -> str:
     )
 
 
+def client_auto_reply_html(doc) -> str:
+    first_name = escape(doc["name"].split(" ")[0])
+    service_line = (
+        f'<p style="color:#475569;font-size:14px;line-height:1.6">You asked about '
+        f'<strong style="color:#0A1428">{escape(doc["service"])}</strong> — that is right in our wheelhouse.</p>'
+        if doc.get("service") else ""
+    )
+    return (
+        '<table role="presentation" width="100%" style="background:#F1F5F9;padding:32px 0">'
+        '<tr><td align="center">'
+        '<table role="presentation" width="560" style="background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif">'
+        '<tr><td style="background:#0A1428;padding:24px 28px">'
+        '<span style="color:#F97316;font-size:18px;font-weight:bold">Master Key Analysis</span><br/>'
+        '<span style="color:#94A3B8;font-size:11px;letter-spacing:2px">DATA INSIGHTS. SMART SOLUTIONS.</span>'
+        '</td></tr>'
+        '<tr><td style="padding:28px">'
+        f'<p style="color:#0A1428;font-size:20px;font-weight:bold;margin:0 0 12px">Thank you, {first_name}.</p>'
+        '<p style="color:#475569;font-size:14px;line-height:1.6">We have received your enquiry and will get back to you shortly. '
+        'In the meantime, feel free to reply to this email with any extra details about your requirement.</p>'
+        f'{service_line}'
+        '<table role="presentation" style="margin-top:20px;background:#F8FAFC;border-radius:8px" width="100%">'
+        '<tr><td style="padding:16px 20px">'
+        '<p style="margin:0;color:#64748B;font-size:12px;letter-spacing:1px">REACH US DIRECTLY</p>'
+        '<p style="margin:8px 0 0;font-size:14px">'
+        '<a href="tel:6300806794" style="color:#EA580C;font-weight:bold;text-decoration:none">6300806794</a>'
+        '<span style="color:#CBD5E1">&nbsp;|&nbsp;</span>'
+        '<a href="mailto:info@masterkeyanalysis.in" style="color:#EA580C;font-weight:bold;text-decoration:none">info@masterkeyanalysis.in</a>'
+        '</p>'
+        '</td></tr></table>'
+        '</td></tr>'
+        f'<tr><td style="padding:16px 28px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px">'
+        f'{escape(EMAIL_FROM_NAME)} · Founded by Vasanth · Unlocking Business Intelligence'
+        '</td></tr>'
+        '</table></td></tr></table>'
+    )
+
+
 async def notify_new_enquiry(doc):
     try:
         subject = f"New enquiry: {doc['name']} — {doc.get('service') or 'General'}"
@@ -234,6 +271,19 @@ async def notify_new_enquiry(doc):
             logger.warning("Enquiry notification failed to send")
     except Exception as e:
         logger.error(f"Enquiry notification error: {e}")
+    try:
+        first_name = doc["name"].split(" ")[0]
+        reply_id = await send_email(
+            to=doc["email"],
+            subject=f"Thank you, {first_name} — we received your enquiry",
+            html=client_auto_reply_html(doc),
+        )
+        if reply_id:
+            logger.info(f"Auto-reply sent to client {doc['email']} (id {reply_id})")
+        else:
+            logger.warning(f"Client auto-reply failed for {doc['email']}")
+    except Exception as e:
+        logger.error(f"Client auto-reply error: {e}")
 
 
 class LoginInput(BaseModel):
