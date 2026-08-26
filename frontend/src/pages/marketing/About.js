@@ -65,7 +65,7 @@ export default function About() {
             </p>
           </FadeUp>
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/10 rounded-2xl overflow-hidden">
-            {[["10+", "Services"], ["Finance", "Financial Analytics & Excel Stock Mgmt"], ["5", "Industries"], ["6", "Step Process"]].map(([n, l], i) => (
+            {[["20+", "Services"], ["Finance", "Financial Analytics & Excel Stock Mgmt"], ["5", "Industries"], ["6", "Step Process"]].map(([n, l], i) => (
               <div key={l} className="bg-navy-900 p-10" data-testid={`stat-${i}`}>
                 <div className="font-display text-5xl font-extrabold text-orange-500 tracking-tighter">{n}</div>
                 <div className="mt-2 text-xs uppercase tracking-[0.25em] text-white/50">{l}</div>
