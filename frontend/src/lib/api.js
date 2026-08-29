@@ -1,19 +1,9 @@
 import axios from "axios";
 
-// 1. Get raw backend URL from env or fallback string
-let rawUrl =
-  process.env.REACT_APP_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://masterkey-website-1.onrender.com";
+// Clean raw URL fallback to prevent bracket/markdown pollution
+const RAW_URL = "https://masterkey-website-1.onrender.com";
 
-// 2. Remove any accidental Markdown brackets/parentheses if present
-if (rawUrl.includes("[")) {
-  const match = rawUrl.match(/https?:\/\/[^\s\)\"]+/);
-  if (match) rawUrl = match[0];
-}
-
-// 3. Remove trailing slash or trailing /api
-export const API = rawUrl.replace(/\/+$/, "").replace(/\/api$/, "");
+export const API = RAW_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 
 const api = axios.create({ baseURL: API });
 
