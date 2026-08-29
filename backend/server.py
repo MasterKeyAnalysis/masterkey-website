@@ -27,9 +27,11 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 
-mongo_url = os.environ["MONGO_URL"]
+# --- SAFE ENVIRONMENT VARIABLE FALLBACKS ---
+mongo_url = os.environ.get("MONGO_URL", "")
+db_name = os.environ.get("DB_NAME", "masterkey")
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
+db = client[db_name]
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -39,7 +41,7 @@ MAX_ROWS = 20000
 
 
 def get_jwt_secret() -> str:
-    return os.environ["JWT_SECRET"]
+    return os.environ.get("JWT_SECRET", "masterkey_secret_key_2026")
 
 
 def hash_password(password: str) -> str:
@@ -752,12 +754,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=[
-    "https://masterkeyanalysis.in",
-    "https://www.masterkeyanalysis.in",
-    "https://masterkey-website.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:5173",
-],
+        "https://masterkeyanalysis.in",
+        "https://www.masterkeyanalysis.in",
+        "https://masterkey-website.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
