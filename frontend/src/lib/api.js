@@ -1,18 +1,21 @@
 import axios from "axios";
 
-// Remove trailing /api here to avoid double-prefix issues
-const BASE_URL = process.env.REACT_APP_BACKEND_URL || 
-                 process.env.NEXT_PUBLIC_API_URL || 
-                 "https://masterkey-website-1.onrender.com";
+// 1. Get raw backend URL from env or fallback string
+let rawUrl =
+  process.env.REACT_APP_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://masterkey-website-1.onrender.com";
 
-export const API = BASE_URL.replace(/\/api\/?$/, ""); // Standardizes base URL
+// 2. Remove any accidental Markdown brackets/parentheses if present
+if (rawUrl.includes("[")) {
+  const match = rawUrl.match(/https?:\/\/[^\s\)\"]+/);
+  if (match) rawUrl = match[0];
+}
 
-const api = axios.create({ 
-  baseURL: API,
-  headers: {
-    "Content-Type": "application/json",
-  }
-});
+// 3. Remove trailing slash or trailing /api
+export const API = rawUrl.replace(/\/+$/, "").replace(/\/api$/, "");
+
+const api = axios.create({ baseURL: API });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("mka_token");
