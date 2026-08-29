@@ -9,6 +9,7 @@ import math
 import asyncio
 import logging
 import ipaddress
+from contextlib import asynccontextmanager
 from html import escape
 from html.parser import HTMLParser
 from urllib.parse import urlparse
@@ -27,22 +28,73 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 
-# --- SAFE ENVIRONMENT VARIABLE FALLBACKS ---
-mongo_url = os.environ.get("MONGO_URL", "")
+# --- LOGGING SETUP ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# --- SECURE CONFIGURATION & CONSTANTS ---
+JWT_ALGORITHM = "HS256"
+MAX_ROWS = 20000
+
+mongo_url = os.environ.get("MONGO_URL")
+if not mongo_url:
+    raise RuntimeError("CRITICAL: MONGO_URL environment variable is not set.")
+
 db_name = os.environ.get("DB_NAME", "masterkey")
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
-app = FastAPI()
-api_router = APIRouter()
-logger = logging.getLogger(__name__)
-JWT_ALGORITHM = "HS256"
-MAX_ROWS = 20000
-
 
 def get_jwt_secret() -> str:
-    return os.environ.get("JWT_SECRET", "masterkey_secret_key_2026")
+    secret = os.environ.get("JWT_SECRET")
+    if not secret:
+        raise RuntimeError("CRITICAL: JWT_SECRET environment variable is not set.")
+    return secret
 
+
+# --- LIFESPAN MANAGEMENT (Replaces Deprecated Startup/Shutdown Events) ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup tasks
+    await db.users.create_index("email", unique=True)
+    await db.dataset_rows.create_index("dataset_id")
+    await db.login_attempts.create_index("identifier")
+
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@masterkeyanalysis.in").lower()
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+
+    if admin_password:
+        existing = await db.users.find_one({"email": admin_email})
+        hashed = bcrypt.hashpw(admin_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        if existing is None:
+            await db.users.insert_one(
+                {
+                    "email": admin_email,
+                    "password_hash": hashed,
+                    "name": "Vasanth",
+                    "role": "admin",
+                    "created_at": datetime.now(timezone.utc),
+                }
+            )
+            logger.info(f"Seeded admin user {admin_email}")
+        elif not bcrypt.checkpw(admin_password.encode("utf-8"), existing["password_hash"].encode("utf-8")):
+            await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hashed}})
+    else:
+        logger.warning("ADMIN_PASSWORD not configured in environment. Skipping auto-seed.")
+
+    yield
+
+    # Shutdown tasks
+    client.close()
+
+
+app = FastAPI(lifespan=lifespan)
+api_router = APIRouter()
+
+# --- SECURITY & AUTH UTILITIES ---
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
@@ -64,12 +116,9 @@ def create_access_token(user_id: str, email: str, role: str) -> str:
 
 
 async def get_current_admin(request: Request):
-    token = None
     auth = request.headers.get("Authorization", "")
-    if auth.startswith("Bearer "):
-        token = auth[7:]
-    if not token:
-        token = request.cookies.get("access_token")
+    token = auth[7:] if auth.startswith("Bearer ") else request.cookies.get("access_token")
+
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
@@ -78,6 +127,7 @@ async def get_current_admin(request: Request):
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
     user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -95,7 +145,7 @@ def to_oid(id_str: str) -> ObjectId:
     return ObjectId(id_str)
 
 
-# ---------------- Email (Emergent managed Resend) ----------------
+# --- EMAIL INTEGRATION ---
 
 EMAIL_BASE_URL = "https://integrations.emergentagent.com"
 EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY")
@@ -104,10 +154,12 @@ EMAIL_REPLY_TO = os.environ.get("EMAIL_REPLY_TO")
 OWNER_NOTIFY_EMAIL = os.environ.get("OWNER_NOTIFY_EMAIL")
 
 _SHORTENERS = ("bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "goo.gl", "rebrand.ly")
-_CRED_ASK = ("reply with your password", "reply with the code", "send your password", "cvv",
-             "send us your password", "enter your password below", "confirm your card number",
-             "your full card number", "seed phrase", "recovery phrase", "verify your card",
-             "social security number", "confirm your bank details")
+_CRED_ASK = (
+    "reply with your password", "reply with the code", "send your password", "cvv",
+    "send us your password", "enter your password below", "confirm your card number",
+    "your full card number", "seed phrase", "recovery phrase", "verify your card",
+    "social security number", "confirm your bank details"
+)
 _HOSTISH = re.compile(r"\b(?:https?://)?((?:[a-z0-9-]+\.)+[a-z]{2,})", re.I)
 
 
@@ -157,23 +209,24 @@ def _assert_safe_email(subject: str, html: str) -> None:
     body = f"{subject}\n{html}".lower()
     for p in _CRED_ASK:
         if p in body:
-            raise ValueError(f"Email asks the recipient for credentials: {p!r} (G2)")
+            raise ValueError(f"Email asks recipient for credentials: {p!r} (G2)")
     for url in scan.urls:
         low = url.strip().lower()
         if low.startswith(("mailto:", "tel:", "cid:", "#")):
             continue
         if not low.startswith("https://"):
-            raise ValueError(f"Email links/assets must be absolute https: {url!r} (G3)")
-        host = urlparse(low).hostname or ""
-        if not _host_ok(host) or urlparse(low).username is not None:
-            raise ValueError(f"Shortened, numeric-host or credential-bearing URL: {url!r} (G3)")
+            raise ValueError(f"Email links must be absolute https: {url!r} (G3)")
+        parsed = urlparse(low)
+        host = parsed.hostname or ""
+        if not _host_ok(host) or parsed.username is not None:
+            raise ValueError(f"Invalid host or credential URL: {url!r} (G3)")
     for href, text in scan.anchors:
         real = urlparse(href.strip().lower()).hostname or ""
         if not real:
             continue
         for m in _HOSTISH.finditer(text):
             if not _same_site(m.group(1).lower(), real):
-                raise ValueError(f"Anchor text {m.group(1)!r} != real link host {real!r} (G3)")
+                raise ValueError(f"Anchor text host mismatch: {m.group(1)!r} != {real!r} (G3)")
 
 
 async def send_email(*, to: str, subject: str, html: str, reply_to: Optional[str] = None) -> Optional[str]:
@@ -182,8 +235,8 @@ async def send_email(*, to: str, subject: str, html: str, reply_to: Optional[str
     if reply_to or EMAIL_REPLY_TO:
         payload["contact_email"] = reply_to or EMAIL_REPLY_TO
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
+        async with httpx.AsyncClient(timeout=30) as http_client:
+            resp = await http_client.post(
                 f"{EMAIL_BASE_URL}/api/v1/email/send",
                 headers={"X-Email-Key": EMAIL_KEY},
                 json=payload,
@@ -219,9 +272,6 @@ def enquiry_email_html(doc) -> str:
         '<p style="color:#64748B;font-size:13px;margin:8px 0 4px">Message</p>'
         f'<p style="color:#0A1428;font-size:14px;line-height:1.6;background:#F8FAFC;border-left:3px solid #F97316;padding:12px 16px;margin:0">{escape(doc["message"])}</p>'
         '</td></tr>'
-        f'<tr><td style="padding:16px 28px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px">'
-        f'Sent by the {escape(EMAIL_FROM_NAME)} website contact form. Reply-To is set to {escape(EMAIL_REPLY_TO or "")}.'
-        '</td></tr>'
         '</table></td></tr></table>'
     )
 
@@ -238,26 +288,12 @@ def client_auto_reply_html(doc) -> str:
         '<tr><td align="center">'
         '<table role="presentation" width="560" style="background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif">'
         '<tr><td style="background:#0A1428;padding:24px 28px">'
-        '<span style="color:#F97316;font-size:18px;font-weight:bold">Master Key Analysis</span><br/>'
-        '<span style="color:#94A3B8;font-size:11px;letter-spacing:2px">DATA INSIGHTS. SMART SOLUTIONS.</span>'
+        '<span style="color:#F97316;font-size:18px;font-weight:bold">Master Key Analysis</span>'
         '</td></tr>'
         '<tr><td style="padding:28px">'
         f'<p style="color:#0A1428;font-size:20px;font-weight:bold;margin:0 0 12px">Thank you, {first_name}.</p>'
-        '<p style="color:#475569;font-size:14px;line-height:1.6">We have received your enquiry and will get back to you shortly. '
-        'In the meantime, feel free to reply to this email with any extra details about your requirement.</p>'
+        '<p style="color:#475569;font-size:14px;line-height:1.6">We received your enquiry and will get back to you shortly.</p>'
         f'{service_line}'
-        '<table role="presentation" style="margin-top:20px;background:#F8FAFC;border-radius:8px" width="100%">'
-        '<tr><td style="padding:16px 20px">'
-        '<p style="margin:0;color:#64748B;font-size:12px;letter-spacing:1px">REACH US DIRECTLY</p>'
-        '<p style="margin:8px 0 0;font-size:14px">'
-        '<a href="tel:6300806794" style="color:#EA580C;font-weight:bold;text-decoration:none">6300806794</a>'
-        '<span style="color:#CBD5E1">&nbsp;|&nbsp;</span>'
-        '<a href="mailto:info@masterkeyanalysis.in" style="color:#EA580C;font-weight:bold;text-decoration:none">info@masterkeyanalysis.in</a>'
-        '</p>'
-        '</td></tr></table>'
-        '</td></tr>'
-        f'<tr><td style="padding:16px 28px;border-top:1px solid #E2E8F0;color:#94A3B8;font-size:11px">'
-        f'{escape(EMAIL_FROM_NAME)} · Founded by Vasanth · Unlocking Business Intelligence'
         '</td></tr>'
         '</table></td></tr></table>'
     )
@@ -266,27 +302,21 @@ def client_auto_reply_html(doc) -> str:
 async def notify_new_enquiry(doc):
     try:
         subject = f"New enquiry: {doc['name']} — {doc.get('service') or 'General'}"
-        email_id = await send_email(to=OWNER_NOTIFY_EMAIL, subject=subject, html=enquiry_email_html(doc))
-        if email_id:
-            logger.info(f"Enquiry notification sent to {OWNER_NOTIFY_EMAIL} (id {email_id})")
-        else:
-            logger.warning("Enquiry notification failed to send")
+        await send_email(to=OWNER_NOTIFY_EMAIL, subject=subject, html=enquiry_email_html(doc))
     except Exception as e:
         logger.error(f"Enquiry notification error: {e}")
     try:
         first_name = doc["name"].split(" ")[0]
-        reply_id = await send_email(
+        await send_email(
             to=doc["email"],
             subject=f"Thank you, {first_name} — we received your enquiry",
             html=client_auto_reply_html(doc),
         )
-        if reply_id:
-            logger.info(f"Auto-reply sent to client {doc['email']} (id {reply_id})")
-        else:
-            logger.warning(f"Client auto-reply failed for {doc['email']}")
     except Exception as e:
         logger.error(f"Client auto-reply error: {e}")
 
+
+# --- PYDANTIC SCHEMAS ---
 
 class LoginInput(BaseModel):
     email: EmailStr
@@ -332,6 +362,8 @@ def serialize_dataset(doc):
     }
 
 
+# --- ROUTES ---
+
 @api_router.get("/")
 async def root():
     return {"message": "Master Key Analysis API"}
@@ -341,8 +373,10 @@ async def root():
 
 @api_router.post("/auth/login")
 async def login(input: LoginInput, request: Request):
-    email = input.email.lower()
-    identifier = f"{request.client.host}:{email}"
+    email = input.email.lower().strip()
+    # Secure rate limit identifier avoiding proxy host spoofing
+    identifier = f"login_lock:{email}"
+
     attempts = await db.login_attempts.find_one({"identifier": identifier})
     if attempts and attempts.get("count", 0) >= 5:
         locked_until = attempts.get("locked_until")
@@ -350,6 +384,7 @@ async def login(input: LoginInput, request: Request):
             locked_until = locked_until.replace(tzinfo=timezone.utc)
         if locked_until and locked_until > datetime.now(timezone.utc):
             raise HTTPException(status_code=429, detail="Too many failed attempts. Try again in 15 minutes.")
+
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(input.password, user["password_hash"]):
         await db.login_attempts.update_one(
@@ -361,6 +396,7 @@ async def login(input: LoginInput, request: Request):
             upsert=True,
         )
         raise HTTPException(status_code=401, detail="Invalid email or password")
+
     await db.login_attempts.delete_one({"identifier": identifier})
     token = create_access_token(str(user["_id"]), email, user.get("role", "admin"))
     return {
@@ -504,7 +540,7 @@ async def upload_dataset(file: UploadFile = File(...), admin=Depends(get_current
         else:
             df = pd.read_excel(io.BytesIO(content))
     except Exception:
-        raise HTTPException(status_code=400, detail="Could not parse the file. Please check its format.")
+        raise HTTPException(status_code=400, detail="Could not parse the file.")
     if df.empty:
         raise HTTPException(status_code=400, detail="The file contains no data")
     sanitize_columns(df)
@@ -528,12 +564,22 @@ async def upload_dataset(file: UploadFile = File(...), admin=Depends(get_current
     }
     result = await db.datasets.insert_one(doc)
     dsid = result.inserted_id
-    records = [
+
+    # Memory Efficient Batched DB Insertions
+    records = (
         {"dataset_id": dsid, "data": {k: clean_value(v) for k, v in row.items()}}
         for row in df.to_dict("records")
-    ]
-    for i in range(0, len(records), 1000):
-        await db.dataset_rows.insert_many(records[i:i + 1000])
+    )
+    
+    batch = []
+    for record in records:
+        batch.append(record)
+        if len(batch) >= 1000:
+            await db.dataset_rows.insert_many(batch)
+            batch.clear()
+    if batch:
+        await db.dataset_rows.insert_many(batch)
+
     created = await db.datasets.find_one({"_id": dsid})
     return serialize_dataset(created)
 
@@ -579,11 +625,16 @@ async def get_rows(
         raise HTTPException(status_code=404, detail="Dataset not found")
     query = {"dataset_id": oid}
     and_clauses = []
+    
+    # ReDoS Protection & Escape Regex
     if q:
+        if len(q) > 100:
+            raise HTTPException(status_code=400, detail="Search query too long.")
+        safe_q = re.escape(q.strip())
         or_clauses = []
         for col in meta.get("columns", []):
             if col["kind"] == "text":
-                or_clauses.append({f"data.{col['name']}": {"$regex": re.escape(q), "$options": "i"}})
+                or_clauses.append({f"data.{col['name']}": {"$regex": safe_q, "$options": "i"}})
             else:
                 try:
                     or_clauses.append({f"data.{col['name']}": float(q)})
@@ -591,6 +642,7 @@ async def get_rows(
                     pass
         if or_clauses:
             and_clauses.append({"$or": or_clauses})
+            
     if filters:
         try:
             fdict = json.loads(filters)
@@ -606,17 +658,22 @@ async def get_rows(
                     continue
                 except (ValueError, TypeError):
                     pass
-            and_clauses.append({f"data.{key}": {"$regex": re.escape(str(value)), "$options": "i"}})
+            safe_val = re.escape(str(value)[:100])
+            and_clauses.append({f"data.{key}": {"$regex": safe_val, "$options": "i"}})
+            
     if and_clauses:
         query["$and"] = and_clauses
+        
     limit = min(max(limit, 1), 100)
     skip = max(skip, 0)
     total = await db.dataset_rows.count_documents(query)
     cursor = db.dataset_rows.find(query)
+    
     if sort and any(c["name"] == sort for c in meta.get("columns", [])):
         cursor = cursor.sort(f"data.{sort}", 1 if order == "asc" else -1)
     else:
         cursor = cursor.sort("_id", 1)
+        
     docs = await cursor.skip(skip).limit(limit).to_list(limit)
     return {
         "total": total,
@@ -691,7 +748,7 @@ async def export_dataset(dataset_id: str, format: str = "csv", admin=Depends(get
     )
 
 
-# ---------------- Dashboard ----------------
+# ---------------- Dashboard & Samples ----------------
 
 @api_router.get("/dashboard/stats")
 async def dashboard_stats(admin=Depends(get_current_admin)):
@@ -748,8 +805,9 @@ async def finance_sample():
     }
 
 
+# --- APPLICATON ASSEMBLY & MIDDLEWARE ---
+
 app.include_router(api_router, prefix="/api")
-app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -764,38 +822,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-
-
-@app.on_event("startup")
-async def startup():
-    await db.users.create_index("email", unique=True)
-    await db.dataset_rows.create_index("dataset_id")
-    await db.login_attempts.create_index("identifier")
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@masterkeyanalysis.in").lower()
-    admin_password = os.environ.get("ADMIN_PASSWORD", "MasterKey@2026")
-    existing = await db.users.find_one({"email": admin_email})
-    if existing is None:
-        await db.users.insert_one(
-            {
-                "email": admin_email,
-                "password_hash": hash_password(admin_password),
-                "name": "Vasanth",
-                "role": "admin",
-                "created_at": datetime.now(timezone.utc),
-            }
-        )
-        logger.info(f"Seeded admin user {admin_email}")
-    elif not verify_password(admin_password, existing["password_hash"]):
-        await db.users.update_one(
-            {"email": admin_email}, {"$set": {"password_hash": hash_password(admin_password)}}
-        )
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
