@@ -1,8 +1,18 @@
 import axios from "axios";
 
-export const API = `${process.env.REACT_APP_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "https://masterkey-website-1.onrender.com"}/api`;
+// Remove trailing /api here to avoid double-prefix issues
+const BASE_URL = process.env.REACT_APP_BACKEND_URL || 
+                 process.env.NEXT_PUBLIC_API_URL || 
+                 "https://masterkey-website-1.onrender.com";
 
-const api = axios.create({ baseURL: API });
+export const API = BASE_URL.replace(/\/api\/?$/, ""); // Standardizes base URL
+
+const api = axios.create({ 
+  baseURL: API,
+  headers: {
+    "Content-Type": "application/json",
+  }
+});
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("mka_token");
