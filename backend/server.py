@@ -380,6 +380,7 @@ async def auth_me(admin=Depends(get_current_admin)):
 # ---------------- Enquiries ----------------
 
 @api_router.post("/enquiries", status_code=201)
+@api_router.post("/enquiry", status_code=201)
 async def create_enquiry(input: EnquiryInput):
     doc = {
         "name": input.name.strip(),
