@@ -807,7 +807,7 @@ async def finance_sample():
 
 # --- APPLICATON ASSEMBLY & MIDDLEWARE ---
 
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
