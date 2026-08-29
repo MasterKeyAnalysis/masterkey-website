@@ -34,7 +34,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
 app = FastAPI()
-api_router = APIRouter(prefix="/api")
+api_router = APIRouter()
 logger = logging.getLogger(__name__)
 JWT_ALGORITHM = "HS256"
 MAX_ROWS = 20000
@@ -748,6 +748,7 @@ async def finance_sample():
     }
 
 
+app.include_router(api_router, prefix="/api")
 app.include_router(api_router)
 
 app.add_middleware(
