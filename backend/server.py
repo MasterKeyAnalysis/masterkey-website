@@ -751,7 +751,13 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_origins=[
+    "https://masterkeyanalysis.in",
+    "https://www.masterkeyanalysis.in",
+    "https://masterkey-website.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+],
     allow_methods=["*"],
     allow_headers=["*"],
 )
