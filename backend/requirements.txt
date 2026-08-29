@@ -1,11 +1,13 @@
 fastapi
 uvicorn
 motor
-bcrypt
+pymongo
+pydantic
+email-validator
 pyjwt
+bcrypt
 httpx
-numpy
 pandas
-pydantic[email]
-python-dotenv
+numpy
 openpyxl
+python-multipart
