@@ -2,12 +2,11 @@ fastapi
 uvicorn
 motor
 pymongo
-pydantic
-email-validator
+pydantic[email]
 pyjwt
 bcrypt
 httpx
 pandas
 numpy
 openpyxl
-python-multipart
+python-dotenv
