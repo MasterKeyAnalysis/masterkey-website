@@ -440,19 +440,23 @@ async def auth_me(admin=Depends(get_current_admin)):
 @api_router.post("/enquiries", status_code=201)
 @api_router.post("/enquiry", status_code=201)
 async def create_enquiry(input: EnquiryInput):
-    doc = {
-        "name": input.name.strip(),
-        "email": input.email.lower(),
-        "phone": input.phone,
-        "service": input.service,
-        "message": input.message.strip(),
-        "status": "new",
-        "created_at": datetime.now(timezone.utc),
-    }
-    result = await db.enquiries.insert_one(doc)
-    if EMAIL_KEY and OWNER_NOTIFY_EMAIL:
-        asyncio.create_task(notify_new_enquiry(doc))
-    return {"id": str(result.inserted_id), "message": "Enquiry received"}
+    try:
+        doc = {
+            "name": input.name.strip(),
+            "email": input.email.lower(),
+            "phone": input.phone,
+            "service": input.service,
+            "message": input.message.strip(),
+            "status": "new",
+            "created_at": datetime.now(timezone.utc),
+        }
+        result = await db.enquiries.insert_one(doc)
+        if EMAIL_KEY and OWNER_NOTIFY_EMAIL:
+            asyncio.create_task(notify_new_enquiry(doc))
+        return {"id": str(result.inserted_id), "message": "Enquiry received"}
+    except Exception as e:
+        print(f"Error saving enquiry: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_router.get("/enquiries")
