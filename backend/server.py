@@ -55,7 +55,7 @@ def get_jwt_secret() -> str:
     return secret
 
 
-# --- LIFESPAN MANAGEMENT (Replaces Deprecated Startup/Shutdown Events) ---
+# --- LIFESPAN MANAGEMENT ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup tasks
@@ -96,10 +96,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 api_router = APIRouter()
 
+# Configured for credentials support with explicit origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "https://masterkeyanalysis.in",
+        "https://www.masterkeyanalysis.in",
+        "https://masterkey-website.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -387,7 +394,6 @@ async def root():
 @api_router.post("/auth/login")
 async def login(input: LoginInput, request: Request):
     email = input.email.lower().strip()
-    # Secure rate limit identifier avoiding proxy host spoofing
     identifier = f"login_lock:{email}"
 
     attempts = await db.login_attempts.find_one({"identifier": identifier})
@@ -817,21 +823,9 @@ async def finance_sample():
         "monthly": monthly,
     }
 
+# --- APPLICATION ROUTER REGISTRATION ---
+app.include_router(api_router, prefix="/api")
 
-# --- APPLICATON ASSEMBLY & MIDDLEWARE ---
-
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=[
-        "https://masterkeyanalysis.in",
-        "https://www.masterkeyanalysis.in",
-        "https://masterkey-website.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:5173",
-    ],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
