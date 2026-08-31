@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Clean raw URL fallback to prevent bracket/markdown pollution
-const RAW_URL = "https://masterkey-website-1.onrender.com";
+// Clean raw URL fallback to use environment variables or Vercel backend
+const RAW_URL = process.env.REACT_APP_API_URL || process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-kohl-15.vercel.app";
 
 export const API = RAW_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 
