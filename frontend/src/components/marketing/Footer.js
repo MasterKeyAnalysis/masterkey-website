@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { KeyRound, Phone, Mail } from "lucide-react";
+import { Key, Phone, Mail } from "lucide-react";
 import { CONTACT } from "@/data/content";
 
 export default function Footer() {
