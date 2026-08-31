@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import {
-  Key, LayoutDashboard, UploadCloud, Search, BarChart3, Table2,
+  LayoutDashboard, UploadCloud, Search, BarChart3, Table2,
   FileDown, ShieldCheck, LogOut, Menu, X, Globe, TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
