@@ -94,6 +94,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 api_router = APIRouter()
 
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return {}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
