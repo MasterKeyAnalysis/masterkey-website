@@ -91,12 +91,10 @@ async def lifespan(app: FastAPI):
     client.close()
 
 
+# --- APPLICATION ASSEMBLY & MIDDLEWARE ---
+
 app = FastAPI(lifespan=lifespan)
 api_router = APIRouter()
-
-@app.options("/{full_path:path}")
-async def options_handler(full_path: str):
-    return {}
 
 app.add_middleware(
     CORSMiddleware,
@@ -105,8 +103,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# --- SECURITY & AUTH UTILITIES ---
 
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return {}
+
+# --- SECURITY & AUTH UTILITIES ---
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
