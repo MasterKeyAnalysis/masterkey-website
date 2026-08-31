@@ -92,11 +92,10 @@ async def lifespan(app: FastAPI):
 
 
 # --- APPLICATION ASSEMBLY & MIDDLEWARE ---
-
 app = FastAPI(lifespan=lifespan)
 api_router = APIRouter()
 
-# Configured for credentials support with explicit origins
+# 1. CORS Middleware Configured First
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -112,9 +111,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.options("/{full_path:path}")
 async def options_handler(full_path: str):
     return {}
+
 
 # --- SECURITY & AUTH UTILITIES ---
 def hash_password(password: str) -> str:
@@ -455,7 +456,7 @@ async def create_enquiry(input: EnquiryInput):
             asyncio.create_task(notify_new_enquiry(doc))
         return {"id": str(result.inserted_id), "message": "Enquiry received"}
     except Exception as e:
-        print(f"Error saving enquiry: {e}")
+        logger.error(f"Error saving enquiry: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -589,7 +590,6 @@ async def upload_dataset(file: UploadFile = File(...), admin=Depends(get_current
     result = await db.datasets.insert_one(doc)
     dsid = result.inserted_id
 
-    # Memory Efficient Batched DB Insertions
     records = (
         {"dataset_id": dsid, "data": {k: clean_value(v) for k, v in row.items()}}
         for row in df.to_dict("records")
@@ -650,7 +650,6 @@ async def get_rows(
     query = {"dataset_id": oid}
     and_clauses = []
     
-    # ReDoS Protection & Escape Regex
     if q:
         if len(q) > 100:
             raise HTTPException(status_code=400, detail="Search query too long.")
