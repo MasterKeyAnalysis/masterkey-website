@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const RAW_URL = process.env.REACT_APP_API_URL || "https://backend-beta-kohl-15.vercel.app";
+// Clean base URL without any markdown brackets or trailing slashes
+const RAW_URL = "https://backend-beta-kohl-15.vercel.app";
 
 export const API = RAW_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 
